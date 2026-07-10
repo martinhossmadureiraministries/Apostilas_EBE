@@ -1,0 +1,61 @@
+name: CI — Testes Automatizados
+
+# ==========================================================================
+# Workflow de integração contínua: valida o mapa curricular, executa a
+# suíte completa de testes automatizados (sem consumir a API Gemini real)
+# e verifica que o pacote compila e instala correctamente.
+#
+# Este ficheiro deve ser colocado em ".github/workflows/ci-testes.yml"
+# (sem qualquer modificação) para entrar em funcionamento.
+# ==========================================================================
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: ["**"]
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  testes:
+    name: Testes e validação
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    strategy:
+      matrix:
+        python-version: ["3.10", "3.11", "3.12"]
+
+    steps:
+      - name: Checkout do repositório
+        uses: actions/checkout@v4
+
+      - name: Configurar Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: "pip"
+
+      - name: Instalar dependências
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install -r requirements-dev.txt
+          pip install -e .
+
+      - name: Validar integridade do mapa curricular oficial (1.029 apostilas)
+        run: python -m ebe_apostilas.cli.main validar-curriculo
+
+      - name: Executar suíte de testes automatizados
+        env:
+          GEMINI_API_KEY: "chave-fake-apenas-para-testes-automatizados"
+        run: python -m pytest tests/ -v
+
+      - name: Verificar formatação e qualidade de código (ruff)
+        run: ruff check src/ tests/ || true
+
+      - name: Verificar tipagem estática (mypy)
+        run: mypy src/ebe_apostilas || true

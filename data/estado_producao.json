@@ -1,0 +1,17 @@
+{
+  "ultima_apostila_concluida_id": null,
+  "ultima_apostila_concluida_codigo": null,
+  "ultima_apostila_concluida_titulo": null,
+  "proxima_apostila_id": 1,
+  "proxima_apostila_codigo": "EBE-APO-0001",
+  "proxima_apostila_titulo": "O Estado de Perdição do Ser Humano",
+  "total_concluidas": 0,
+  "total_oficial": 1029,
+  "percentual_concluido": 0.0,
+  "data_ultima_execucao": "2026-07-10T21:44:09+00:00",
+  "status_ultima_execucao": "nunca_executado",
+  "workflow_executado": null,
+  "versao_plataforma": "1.0.0",
+  "erros_execucao_atual": [],
+  "apostilas_geradas_na_execucao_atual": []
+}

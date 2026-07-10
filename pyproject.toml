@@ -1,0 +1,44 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ebe-apostilas"
+version = "1.0.0"
+description = "Plataforma automática de geração das apostilas curriculares da Escola Bíblica Epignósis usando a API gratuita do Google Gemini."
+readme = "LEIA-ME.md"
+requires-python = ">=3.10"
+license = { text = "Proprietary - Martinho S. S. Madureira Ministries" }
+authors = [
+    { name = "Escola Bíblica Epignósis" }
+]
+dependencies = [
+    "google-genai>=1.20.0,<3.0.0",
+    "python-docx>=1.1.2,<2.0.0",
+    "pydantic>=2.7.0,<3.0.0",
+    "pydantic-settings>=2.3.0,<3.0.0",
+    "tenacity>=8.3.0,<10.0.0",
+    "python-dotenv>=1.0.1,<2.0.0",
+    "PyYAML>=6.0.1,<7.0.0",
+]
+
+[project.scripts]
+ebe-apostilas = "ebe_apostilas.cli.main:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.mypy]
+python_version = "3.10"
+ignore_missing_imports = true
+warn_unused_ignores = false
+
+[tool.pytest.ini_options]
+minversion = "7.0"
+testpaths = ["tests"]
+pythonpath = ["src"]
+addopts = "-ra"

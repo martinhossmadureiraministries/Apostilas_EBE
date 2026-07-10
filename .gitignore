@@ -1,0 +1,37 @@
+# === Ambientes Python ===
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# === Segredos e ambiente local (NUNCA versionar) ===
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+
+# === Artefactos de execução ===
+# Os ficheiros de checkpoint (estado_producao.json, registro_apostilas.json,
+# rate_limit_state.json) e as apostilas geradas em output/ SÃO versionados
+# de propósito: são o checkpoint persistente que permite a retomada
+# automática entre execuções do workflow no GitHub Actions. Apenas os
+# ficheiros temporários de escrita atómica e os logs diários (voláteis)
+# são ignorados.
+logs/*.log
+data/*.json.tmp
+
+# === Sistema operativo / editores ===
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
