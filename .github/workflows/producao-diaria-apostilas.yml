@@ -1,0 +1,131 @@
+name: Produção Diária de Apostilas EBE
+
+# ==========================================================================
+# Workflow de produção automática das apostilas curriculares da Escola
+# Bíblica Epignósis (EBE), utilizando exclusivamente a API gratuita do
+# Google Gemini.
+#
+# Este ficheiro deve ser colocado em ".github/workflows/producao-diaria-apostilas.yml"
+# (sem qualquer modificação) para entrar em funcionamento.
+#
+# Requer o GitHub Secret obrigatório:
+#   GEMINI_API_KEY — chave gratuita obtida em https://aistudio.google.com/apikey
+#
+# Comportamento:
+#   - Executa diariamente às 03:00 UTC (madrugada, baixo tráfego).
+#   - Gera exactamente 11 apostilas pendentes por execução (configurável).
+#   - Nunca reprocessa apostilas já concluídas (controlo de duplicidade).
+#   - Retoma automaticamente do ponto exacto da execução anterior.
+#   - Persiste checkpoint, registo e apostilas geradas de volta no
+#     repositório, via commit automático.
+#   - Nunca falha "vermelho" por apostilas individuais com erro — os erros
+#     ficam registados em PROJECT_STATE.md e são retomados na próxima
+#     execução; apenas falhas de ambiente/infra interrompem o workflow.
+# ==========================================================================
+
+on:
+  schedule:
+    - cron: "0 3 * * *"
+  workflow_dispatch:
+    inputs:
+      quantidade:
+        description: "Número de apostilas a gerar nesta execução (deixe vazio para usar o valor padrão, 11)."
+        required: false
+        default: ""
+
+permissions:
+  contents: write
+
+concurrency:
+  group: producao-apostilas-ebe
+  cancel-in-progress: false
+
+jobs:
+  gerar-apostilas:
+    name: Gerar lote diário de apostilas
+    runs-on: ubuntu-latest
+    timeout-minutes: 340
+
+    env:
+      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+      GEMINI_MODEL: ${{ vars.GEMINI_MODEL || 'gemini-2.5-flash' }}
+      GEMINI_FALLBACK_MODEL: ${{ vars.GEMINI_FALLBACK_MODEL || 'gemini-2.0-flash' }}
+      GEMINI_RPM_LIMIT: ${{ vars.GEMINI_RPM_LIMIT || '8' }}
+      GEMINI_TPM_LIMIT: ${{ vars.GEMINI_TPM_LIMIT || '200000' }}
+      GEMINI_RPD_LIMIT: ${{ vars.GEMINI_RPD_LIMIT || '180' }}
+      APOSTILAS_POR_EXECUCAO: ${{ vars.APOSTILAS_POR_EXECUCAO || '11' }}
+
+    steps:
+      - name: Checkout do repositório
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configurar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Validar variáveis obrigatórias
+        run: |
+          if [ -z "${GEMINI_API_KEY}" ]; then
+            echo "::error::GEMINI_API_KEY não está configurada como GitHub Secret. Configure-a em Settings → Secrets and variables → Actions."
+            exit 1
+          fi
+          echo "GEMINI_API_KEY configurada (valor omitido por segurança)."
+
+      - name: Instalar dependências
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install -e .
+
+      - name: Validar integridade do mapa curricular oficial
+        run: python -m ebe_apostilas.cli.main validar-curriculo
+
+      - name: Validar ambiente Gemini
+        run: python -m ebe_apostilas.cli.main validar-ambiente
+
+      - name: Mostrar estado actual da produção
+        run: python -m ebe_apostilas.cli.main status
+
+      - name: Gerar lote diário de apostilas
+        id: gerar
+        run: |
+          QTD="${{ github.event.inputs.quantidade }}"
+          if [ -n "$QTD" ]; then
+            python -m ebe_apostilas.cli.main gerar-lote --quantidade "$QTD" --workflow "github-actions-diario"
+          else
+            python -m ebe_apostilas.cli.main gerar-lote --workflow "github-actions-diario"
+          fi
+
+      - name: Mostrar estado final da produção
+        if: always()
+        run: python -m ebe_apostilas.cli.main status
+
+      - name: Commit e push automático dos resultados
+        if: always()
+        run: |
+          git config user.name "ebe-apostilas-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add data/ output/ logs/ PROJECT_STATE.md CHANGELOG.md 2>/dev/null || true
+          if git diff --cached --quiet; then
+            echo "Nenhuma alteração para commitar."
+          else
+            git commit -m "chore(producao): geração automática diária de apostilas [skip ci]"
+            for tentativa in 1 2 3; do
+              git pull --rebase origin "\( {GITHUB_REF_NAME}" && git push origin "HEAD: \){GITHUB_REF_NAME}" && break
+              echo "Falha ao enviar (tentativa $tentativa); aguardando antes de tentar novamente..."
+              sleep 10
+            done
+          fi
+
+      - name: Publicar logs como artefacto
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: logs-execucao-${{ github.run_id }}
+          path: logs/*.log
+          retention-days: 30
+          if-no-files-found: ignore
