@@ -8,8 +8,8 @@
     "data_conclusao": "",
     "status": "erro",
     "caminho_docx": null,
-    "tentativas": 3,
-    "ultimo_erro": "'GeminiClient' object has no attribute 'gerar_conteudo_apostila'",
+    "tentativas": 4,
+    "ultimo_erro": "RetryError[<Future at 0x7faa2e2f86d0 state=finished raised GeracaoConteudoError>]",
     "palavras": 0,
     "modelo_usado": null
   }
