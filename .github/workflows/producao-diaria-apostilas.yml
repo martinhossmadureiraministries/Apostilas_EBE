@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       quantidade:
-        description: "Número de apostilas a gerar (deixe vazio = 11)"
+        description: "Número de apostilas (deixe vazio = 1 para evitar quota)"
         required: false
         default: ""
 
@@ -19,7 +19,7 @@ concurrency:
 
 jobs:
   gerar-apostilas:
-    name: Gerar lote + upload Drive
+    name: Gerar lote
     runs-on: ubuntu-latest
     timeout-minutes: 340
 
@@ -30,8 +30,7 @@ jobs:
       GEMINI_RPM_LIMIT: ${{ vars.GEMINI_RPM_LIMIT || '8' }}
       GEMINI_TPM_LIMIT: ${{ vars.GEMINI_TPM_LIMIT || '200000' }}
       GEMINI_RPD_LIMIT: ${{ vars.GEMINI_RPD_LIMIT || '180' }}
-      APOSTILAS_POR_EXECUCAO: ${{ vars.APOSTILAS_POR_EXECUCAO || '1' }}  # ← Reduzido para evitar quota
-      GOOGLE_DRIVE_FOLDER_ID: ${{ vars.GOOGLE_DRIVE_FOLDER_ID }}
+      APOSTILAS_POR_EXECUCAO: ${{ vars.APOSTILAS_POR_EXECUCAO || '1' }}
 
     steps:
       - name: Checkout
@@ -45,11 +44,11 @@ jobs:
           python-version: "3.11"
           cache: "pip"
 
-      - name: Instalar dependências + Google Drive
+      - name: Instalar dependências
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-          pip install -e . google-auth google-api-python-client
+          pip install -e .
 
       - name: Validar
         run: |
@@ -65,28 +64,6 @@ jobs:
             python -m ebe_apostilas.cli.main gerar-lote --workflow "github-actions-diario"
           fi
 
-      - name: Upload apostilas para Google Drive
-        if: always()
-        run: |
-          python - <<EOF
-import os, glob, json
-from google.oauth2.service_account import Credentials
-from googleapiclient.discovery import build
-from googleapiclient.http import MediaFileUpload
-
-folder_id = os.getenv('GOOGLE_DRIVE_FOLDER_ID')
-if not folder_id:
-  print("Sem GOOGLE_DRIVE_FOLDER_ID configurado.")
-else:
-  creds = Credentials.from_service_account_info(json.loads(os.getenv('GOOGLE_DRIVE_CREDENTIALS')))
-  drive = build('drive', 'v3', credentials=creds)
-  for docx in glob.glob('output/apostilas/*.docx'):
-    file_metadata = {'name': os.path.basename(docx), 'parents': [folder_id]}
-    media = MediaFileUpload(docx, mimetype='application/vnd.openxmlformats-officedocument.wordprocessingml.document', resumable=True)
-    drive.files().create(body=file_metadata, media_body=media, fields='id').execute()
-    print(f'✅ Upload: {os.path.basename(docx)}')
-EOF
-
       - name: Commit metadados
         if: always()
         run: |
@@ -96,16 +73,16 @@ EOF
           if git diff --cached --quiet; then
             echo "Nada para commitar."
           else
-            git commit -m "chore(producao): geração + upload Drive [skip ci]"
+            git commit -m "chore(producao): geração automática [skip ci]"
             git pull --rebase origin main || true
             git push origin HEAD:main || true
           fi
 
-      - name: Artefactos (backup)
+      - name: Artefacto (apostilas + logs)
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: output-${{ github.run_id }}
+          name: apostilas-${{ github.run_id }}
           path: |
             logs/*.log
             output/apostilas/*.docx
