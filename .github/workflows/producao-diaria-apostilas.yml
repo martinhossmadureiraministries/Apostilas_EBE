@@ -6,84 +6,42 @@ on:
   workflow_dispatch:
     inputs:
       quantidade:
-        description: "Número de apostilas (deixe vazio = 1 para evitar quota)"
+        description: "Quantidade (11)"
         required: false
-        default: ""
+        default: "11"
 
 permissions:
   contents: write
 
-concurrency:
-  group: producao-apostilas-ebe
-  cancel-in-progress: false
-
 jobs:
   gerar-apostilas:
-    name: Gerar lote
     runs-on: ubuntu-latest
-    timeout-minutes: 340
+    timeout-minutes: 180
 
     env:
-      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-      GEMINI_MODEL: ${{ vars.GEMINI_MODEL || 'gemini-2.0-flash' }}
-      GEMINI_FALLBACK_MODEL: ${{ vars.GEMINI_FALLBACK_MODEL || 'gemini-2.0-flash' }}
-      GEMINI_RPM_LIMIT: ${{ vars.GEMINI_RPM_LIMIT || '8' }}
-      GEMINI_TPM_LIMIT: ${{ vars.GEMINI_TPM_LIMIT || '200000' }}
-      GEMINI_RPD_LIMIT: ${{ vars.GEMINI_RPD_LIMIT || '180' }}
-      APOSTILAS_POR_EXECUCAO: ${{ vars.APOSTILAS_POR_EXECUCAO || '1' }}
+      GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+      APOSTILAS_POR_EXECUCAO: ${{ vars.APOSTILAS_POR_EXECUCAO || '11' }}
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
+      - uses: actions/checkout@v4
 
-      - name: Setup Python
-        uses: actions/setup-python@v5
+      - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-          cache: "pip"
 
-      - name: Instalar dependências
+      - name: Instalar
         run: |
-          python -m pip install --upgrade pip
           pip install -r requirements.txt
-          pip install -e .
+          pip install -e . groq
 
-      - name: Validar
+      - name: Gerar lote com Groq
         run: |
-          python -m ebe_apostilas.cli.main validar-curriculo
-          python -m ebe_apostilas.cli.main validar-ambiente
+          python -m ebe_apostilas.cli.main gerar-lote --quantidade ${{ github.event.inputs.quantidade || 11 }} --workflow "github-actions-diario"
 
-      - name: Gerar lote
-        run: |
-          QTD="${{ github.event.inputs.quantidade }}"
-          if [ -n "$QTD" ]; then
-            python -m ebe_apostilas.cli.main gerar-lote --quantidade "$QTD" --workflow "github-actions-diario"
-          else
-            python -m ebe_apostilas.cli.main gerar-lote --workflow "github-actions-diario"
-          fi
-
-      - name: Commit metadados
+      - name: Commit
         if: always()
         run: |
-          git config user.name "ebe-apostilas-bot"
-          git config user.email "actions@users.noreply.github.com"
-          git add data/ PROJECT_STATE.md CHANGELOG.md logs/ 2>/dev/null || true
-          if git diff --cached --quiet; then
-            echo "Nada para commitar."
-          else
-            git commit -m "chore(producao): geração automática [skip ci]"
-            git pull --rebase origin main || true
-            git push origin HEAD:main || true
-          fi
-
-      - name: Artefacto (apostilas + logs)
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: apostilas-${{ github.run_id }}
-          path: |
-            logs/*.log
-            output/apostilas/*.docx
-          retention-days: 7
+          git config user.name "bot"
+          git config user.email "bot@github.com"
+          git add data/ PROJECT_STATE.md logs/ 2>/dev/null || true
+          git diff --cached --quiet || git commit -m "chore: geração Groq" && git push
