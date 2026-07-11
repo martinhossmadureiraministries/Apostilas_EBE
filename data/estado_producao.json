@@ -8,10 +8,17 @@
   "total_concluidas": 0,
   "total_oficial": 1029,
   "percentual_concluido": 0.0,
-  "data_ultima_execucao": "2026-07-11T09:09:10+00:00",
-  "status_ultima_execucao": "em_execucao",
+  "data_ultima_execucao": "2026-07-11T09:15:50+00:00",
+  "status_ultima_execucao": "concluido_com_erros",
   "workflow_executado": "github-actions-diario",
   "versao_plataforma": "1.0.0",
-  "erros_execucao_atual": [],
+  "erros_execucao_atual": [
+    {
+      "apostila_id": 1,
+      "codigo": "EBE-APO-0001",
+      "mensagem": "'GeminiClient' object has no attribute 'gerar_conteudo_apostila'",
+      "data": "2026-07-11T09:15:50+00:00"
+    }
+  ],
   "apostilas_geradas_na_execucao_atual": []
 }

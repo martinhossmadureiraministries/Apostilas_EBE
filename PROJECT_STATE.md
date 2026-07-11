@@ -10,7 +10,7 @@
 |---|---|
 | Versão da plataforma | `1.0.0` |
 | Sistema | `Linux 6.17.0-1018-azure` |
-| Última execução (UTC) | `2026-07-11T08:35:33+00:00` |
+| Última execução (UTC) | `2026-07-11T09:15:50+00:00` |
 | Estado da última execução | **concluido_com_erros** |
 | Workflow executado | `github-actions-diario` |
 | Total concluído | **0 / 1029** |
@@ -34,7 +34,7 @@ _Nenhuma apostila gerada na última execução._
 
 ## Erros da Última Execução
 
-- `EBE-APO-0001` (ID 1) — Não foi possível gerar conteúdo válido para EBE-APO-0001 (O Estado de Perdição do Ser Humano) após tentar todos os modelos configurados. Último erro: 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. \n* Quota exceeded for metric: generativelanguage. _( 2026-07-11T08:35:33+00:00 )_
+- `EBE-APO-0001` (ID 1) — 'GeminiClient' object has no attribute 'gerar_conteudo_apostila' _( 2026-07-11T09:15:50+00:00 )_
 
 ## Retomada Automática
 
@@ -46,4 +46,4 @@ manual para continuar a produção — basta reexecutar o workflow ou o comando
 `ebe-apostilas gerar-lote`.
 
 ---
-_Actualizado automaticamente em 2026-07-11T08:35:33+00:00 UTC._
+_Actualizado automaticamente em 2026-07-11T09:15:50+00:00 UTC._
