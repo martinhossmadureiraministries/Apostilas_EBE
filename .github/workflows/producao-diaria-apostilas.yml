@@ -31,15 +31,14 @@ jobs:
       GEMINI_TPM_LIMIT: ${{ vars.GEMINI_TPM_LIMIT || '200000' }}
       GEMINI_RPD_LIMIT: ${{ vars.GEMINI_RPD_LIMIT || '180' }}
       APOSTILAS_POR_EXECUCAO: ${{ vars.APOSTILAS_POR_EXECUCAO || '11' }}
-      GOOGLE_DRIVE_FOLDER_ID: ${{ vars.GOOGLE_DRIVE_FOLDER_ID || '1g4YpWLTUnLLAfJsn7Z5AZ_BAMhas1Gk_' }}  # ← TUA PASTA
 
     steps:
-      - name: Checkout
+      - name: Checkout do repositório
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Setup Python
+      - name: Configurar Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
@@ -49,14 +48,17 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-          pip install -e . google-auth google-api-python-client
+          pip install -e .
 
-      - name: Validar ambiente
+      - name: Validar currículo e ambiente
         run: |
           python -m ebe_apostilas.cli.main validar-curriculo
           python -m ebe_apostilas.cli.main validar-ambiente
 
-      - name: Gerar lote
+      - name: Mostrar estado atual
+        run: python -m ebe_apostilas.cli.main status
+
+      - name: Gerar lote de apostilas
         run: |
           QTD="${{ github.event.inputs.quantidade }}"
           if [ -n "$QTD" ]; then
@@ -65,44 +67,31 @@ jobs:
             python -m ebe_apostilas.cli.main gerar-lote --workflow "github-actions-diario"
           fi
 
-      - name: Upload para Google Drive
+      - name: Mostrar estado final
         if: always()
-        run: |
-          python -c '
-import os
-from google.oauth2.service_account import Credentials
-from googleapiclient.discovery import build
-import glob
+        run: python -m ebe_apostilas.cli.main status
 
-folder_id = os.getenv("GOOGLE_DRIVE_FOLDER_ID")
-creds = Credentials.from_service_account_info(__import__("json").loads(os.getenv("GOOGLE_DRIVE_CREDENTIALS")))
-drive = build("drive", "v3", credentials=creds)
-
-for docx in glob.glob("output/apostilas/*.docx"):
-    file_metadata = {"name": os.path.basename(docx), "parents": [folder_id]}
-    media = {"mimeType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "body": open(docx, "rb")}
-    drive.files().create(body=file_metadata, media_body=media, fields="id").execute()
-    print(f"Upload OK: {docx}")
-'
-
-      - name: Commit metadados (sem .docx grandes)
+      - name: Fazer commit dos metadados (data/, PROJECT_STATE.md, logs)
         if: always()
         run: |
           git config user.name "ebe-apostilas-bot"
           git config user.email "actions@users.noreply.github.com"
           git add data/ PROJECT_STATE.md CHANGELOG.md logs/ 2>/dev/null || true
           if git diff --cached --quiet; then
-            echo "Nada para commitar."
+            echo "Nenhuma alteração para commitar."
           else
-            git commit -m "chore(producao): geração automática + upload Drive [skip ci]"
+            git commit -m "chore(producao): geração automática diária [skip ci]"
             git pull --rebase origin main || true
             git push origin HEAD:main || true
           fi
 
-      - name: Publicar logs
+      - name: Publicar logs e apostilas geradas como artefacto
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: logs-${{ github.run_id }}
-          path: logs/*.log
+          name: apostilas-e-logs-${{ github.run_id }}
+          path: |
+            logs/*.log
+            output/apostilas/*.docx
           retention-days: 30
+          if-no-files-found: warn
