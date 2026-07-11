@@ -1,4 +1,4 @@
-name: Produção Diária de Apostilas EBE
+name: Produção Diária de Apostilas EBE (Groq)
 
 on:
   schedule:
@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       quantidade:
-        description: "Quantidade (11)"
+        description: "Quantidade"
         required: false
         default: "11"
 
@@ -20,6 +20,7 @@ jobs:
 
     env:
       GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+      GROQ_MODEL: ${{ vars.GROQ_MODEL || 'llama-3.1-70b-versatile' }}
       APOSTILAS_POR_EXECUCAO: ${{ vars.APOSTILAS_POR_EXECUCAO || '11' }}
 
     steps:
@@ -38,10 +39,10 @@ jobs:
         run: |
           python -m ebe_apostilas.cli.main gerar-lote --quantidade ${{ github.event.inputs.quantidade || 11 }} --workflow "github-actions-diario"
 
-      - name: Commit
+      - name: Commit metadados
         if: always()
         run: |
-          git config user.name "bot"
+          git config user.name "ebe-bot"
           git config user.email "bot@github.com"
-          git add data/ PROJECT_STATE.md logs/ 2>/dev/null || true
-          git diff --cached --quiet || git commit -m "chore: geração Groq" && git push
+          git add data/ PROJECT_STATE.md CHANGELOG.md logs/ 2>/dev/null || true
+          git diff --cached --quiet || git commit -m "chore(producao): Groq batch" && git push
