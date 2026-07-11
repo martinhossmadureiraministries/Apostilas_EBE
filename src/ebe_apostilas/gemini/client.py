@@ -8,8 +8,6 @@ class GeracaoConteudoError(Exception):
 
 class GeminiClient:
     def __init__(self, settings=None, rate_limiter=None):
-        # Aceita os parâmetros do código original (settings e rate_limiter)
-        # mas usamos Groq
         self.settings = settings
         self.rate_limiter = rate_limiter
 
@@ -33,6 +31,12 @@ class GeminiClient:
         except Exception as e:
             raise GeracaoConteudoError(f"Erro na geração com Groq: {str(e)}") from e
 
-    # Compatibilidade total com o resto do sistema
+    # Método esperado pelo queue_manager
+    def gerar_conteudo_apostila(self, item):
+        """Método compatível com o sistema original."""
+        prompt = f"Gere uma apostila completa para o tema: {item.titulo if hasattr(item, 'titulo') else item}\n\nSiga o estilo institucional da Escola Bíblica Epignósis."
+        return self.generate_content(prompt)
+
+    # Compatibilidade adicional
     def generate(self, prompt):
         return self.generate_content(prompt)
