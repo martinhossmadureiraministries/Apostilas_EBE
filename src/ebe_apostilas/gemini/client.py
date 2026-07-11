@@ -34,7 +34,22 @@ class GeminiClient:
     # Método esperado pelo queue_manager
     def gerar_conteudo_apostila(self, item):
         """Método compatível com o sistema original."""
-        prompt = f"Gere uma apostila completa para o tema: {item.titulo if hasattr(item, 'titulo') else item}\n\nSiga o estilo institucional da Escola Bíblica Epignósis."
+        titulo = getattr(item, 'titulo', str(item))
+        prompt = f"""Gere uma apostila completa e original da Escola Bíblica Epignósis para o tema: {titulo}.
+
+Siga rigorosamente o padrão institucional:
+- Capa com identidade EBE
+- Marco filosófico
+- Ficha técnica
+- Índice automático
+- Desenvolvimento estruturado com quadros, tabelas e exercícios em 3 blocos (Compreensão, Reflexão, Ministério)
+- Estudo bíblico complementar
+- Glossário
+- Bibliografia
+- Anotações pessoais
+
+Use português de Portugal/Angola (pt-PT), linguagem clara, teologicamente precisa e pastoral. Extensão: 15-20 páginas reais em .docx."""
+
         return self.generate_content(prompt)
 
     # Compatibilidade adicional
