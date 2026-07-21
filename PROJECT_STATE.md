@@ -10,7 +10,7 @@
 |---|---|
 | Versão da plataforma | `1.0.0` |
 | Sistema | `Linux 6.17.0-1020-azure` |
-| Última execução (UTC) | `2026-07-20T05:57:47+00:00` |
+| Última execução (UTC) | `2026-07-21T05:39:24+00:00` |
 | Estado da última execução | **concluido_com_erros** |
 | Workflow executado | `github-actions-diario` |
 | Total concluído | **0 / 1029** |
@@ -34,7 +34,7 @@ _Nenhuma apostila gerada na última execução._
 
 ## Erros da Última Execução
 
-- `EBE-APO-0001` (ID 1) — RetryError[<Future at 0x7f5214f043d0 state=finished raised GeracaoConteudoError>] _( 2026-07-20T05:57:47+00:00 )_
+- `EBE-APO-0001` (ID 1) — RetryError[<Future at 0x7f57a2ff0ad0 state=finished raised GeracaoConteudoError>] _( 2026-07-21T05:39:24+00:00 )_
 
 ## Retomada Automática
 
@@ -46,4 +46,4 @@ manual para continuar a produção — basta reexecutar o workflow ou o comando
 `ebe-apostilas gerar-lote`.
 
 ---
-_Actualizado automaticamente em 2026-07-20T05:57:47+00:00 UTC._
+_Actualizado automaticamente em 2026-07-21T05:39:24+00:00 UTC._
