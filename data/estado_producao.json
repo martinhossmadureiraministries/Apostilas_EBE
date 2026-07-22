@@ -8,7 +8,7 @@
   "total_concluidas": 0,
   "total_oficial": 1029,
   "percentual_concluido": 0.0,
-  "data_ultima_execucao": "2026-07-21T05:39:24+00:00",
+  "data_ultima_execucao": "2026-07-22T05:38:10+00:00",
   "status_ultima_execucao": "concluido_com_erros",
   "workflow_executado": "github-actions-diario",
   "versao_plataforma": "1.0.0",
@@ -16,8 +16,8 @@
     {
       "apostila_id": 1,
       "codigo": "EBE-APO-0001",
-      "mensagem": "RetryError[<Future at 0x7f57a2ff0ad0 state=finished raised GeracaoConteudoError>]",
-      "data": "2026-07-21T05:39:24+00:00"
+      "mensagem": "RetryError[<Future at 0x7f4ae97f3a10 state=finished raised GeracaoConteudoError>]",
+      "data": "2026-07-22T05:38:10+00:00"
     }
   ],
   "apostilas_geradas_na_execucao_atual": []
