@@ -8,8 +8,8 @@
     "data_conclusao": "",
     "status": "erro",
     "caminho_docx": null,
-    "tentativas": 30,
-    "ultimo_erro": "RetryError[<Future at 0x7fd1f8be8b50 state=finished raised GeracaoConteudoError>]",
+    "tentativas": 31,
+    "ultimo_erro": "RetryError[<Future at 0x7f97ed600590 state=finished raised GeracaoConteudoError>]",
     "palavras": 0,
     "modelo_usado": null
   }
